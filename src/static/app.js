@@ -13,6 +13,15 @@ document.addEventListener("DOMContentLoaded", () => {
       // Clear loading message
       activitiesList.innerHTML = "";
 
+      // Helper: generate initials from email (e.g. "john.doe@..." => "JD")
+      function getInitials(email) {
+        const local = (email || "").split("@")[0] || "";
+        const parts = local.split(/[\._-]+/).filter(Boolean);
+        if (parts.length === 0) return (local.charAt(0) || "").toUpperCase();
+        if (parts.length === 1) return (parts[0].charAt(0) || "").toUpperCase();
+        return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+      }
+
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
         const activityCard = document.createElement("div");
@@ -20,11 +29,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const spotsLeft = details.max_participants - details.participants.length;
 
+        // Build participants markup
+        let participantsMarkup = "";
+        if (Array.isArray(details.participants) && details.participants.length > 0) {
+          participantsMarkup += `<div class="participants-section"><h5>Participants</h5><ul class="participants-list">`;
+          details.participants.forEach((p) => {
+            const initials = getInitials(p);
+            participantsMarkup += `
+              <li>
+                <span class="participant-avatar">${initials}</span>
+                <span class="participant-email">${p}</span>
+              </li>
+            `;
+          });
+          participantsMarkup += `</ul></div>`;
+        } else {
+          participantsMarkup = `<p class="no-participants">No participants yet. Be the first to sign up!</p>`;
+        }
+
         activityCard.innerHTML = `
           <h4>${name}</h4>
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          ${participantsMarkup}
         `;
 
         activitiesList.appendChild(activityCard);
